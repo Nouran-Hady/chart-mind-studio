@@ -140,7 +140,7 @@ ${JSON.stringify(rowsForContext)}`;
                     question: lastUserText.slice(0, 1000),
                     insight_text: assistantText.slice(0, 8000),
                     chart_type: chartType,
-                    chart_config: chartConfig ?? null,
+                    chart_config: (chartConfig ?? null) as never,
                   });
                 }
               }
