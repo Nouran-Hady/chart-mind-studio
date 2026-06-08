@@ -86,8 +86,8 @@ ${JSON.stringify(rowsForContext)}`;
         const result = streamText({
           model,
           system: `${SYSTEM_PROMPT}\n\n${datasetContext}`,
-          messages: convertToModelMessages(messages),
-          onError: ({ error }) => console.error("[chat] streamText error:", error),
+          messages: await convertToModelMessages(messages),
+          onError: ({ error }: { error: unknown }) => console.error("[chat] streamText error:", error),
         });
 
         return result.toUIMessageStreamResponse({
