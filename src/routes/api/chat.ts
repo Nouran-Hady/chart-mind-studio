@@ -97,25 +97,21 @@ ${JSON.stringify(rowsForContext)}`;
               // Save only the last user message + assistant message (avoid duplicates).
               const lastUser = [...finalMessages].reverse().find((m) => m.role === "user");
               const lastAssistant = [...finalMessages].reverse().find((m) => m.role === "assistant");
-              const rows: Array<{
-                thread_id: string;
-                user_id: string;
-                role: string;
-                message: UIMessage;
-              }> = [];
+              const rows: Array<Record<string, unknown>> = [];
               if (lastUser) {
-                rows.push({ thread_id: threadId, user_id: userId, role: "user", message: lastUser });
+                rows.push({ thread_id: threadId, user_id: userId, role: "user", message: lastUser as unknown as object });
               }
               if (lastAssistant) {
                 rows.push({
                   thread_id: threadId,
                   user_id: userId,
                   role: "assistant",
-                  message: lastAssistant,
+                  message: lastAssistant as unknown as object,
                 });
               }
               if (rows.length) {
-                await supabaseAdmin.from("chat_messages").insert(rows);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                await supabaseAdmin.from("chat_messages").insert(rows as any);
                 await supabaseAdmin
                   .from("chat_threads")
                   .update({ updated_at: new Date().toISOString() })
