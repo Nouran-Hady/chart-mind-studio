@@ -85,7 +85,7 @@ function ChatPage() {
       threadId={threadId}
       datasetId={datasetId}
       datasetName={ds.data?.name ?? "dataset"}
-      initialMessages={(history.data as UIMessage[]) ?? []}
+      initialMessages={(history.data as unknown as UIMessage[]) ?? []}
     />
   );
 }
