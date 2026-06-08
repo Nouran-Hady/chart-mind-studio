@@ -14,7 +14,196 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: Json
+          role: string
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: Json
+          role: string
+          thread_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: Json
+          role?: string
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_threads: {
+        Row: {
+          created_at: string
+          dataset_id: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dataset_id: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dataset_id?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_threads_dataset_id_fkey"
+            columns: ["dataset_id"]
+            isOneToOne: false
+            referencedRelation: "datasets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      datasets: {
+        Row: {
+          column_count: number
+          created_at: string
+          file_size: number | null
+          filename: string
+          full_rows: Json
+          id: string
+          missing_values: number | null
+          name: string
+          row_count: number
+          sample_rows: Json
+          schema_json: Json
+          summary: string | null
+          user_id: string
+        }
+        Insert: {
+          column_count?: number
+          created_at?: string
+          file_size?: number | null
+          filename: string
+          full_rows?: Json
+          id?: string
+          missing_values?: number | null
+          name: string
+          row_count?: number
+          sample_rows?: Json
+          schema_json?: Json
+          summary?: string | null
+          user_id: string
+        }
+        Update: {
+          column_count?: number
+          created_at?: string
+          file_size?: number | null
+          filename?: string
+          full_rows?: Json
+          id?: string
+          missing_values?: number | null
+          name?: string
+          row_count?: number
+          sample_rows?: Json
+          schema_json?: Json
+          summary?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      insights: {
+        Row: {
+          chart_config: Json | null
+          chart_type: string | null
+          created_at: string
+          dataset_id: string
+          id: string
+          insight_text: string | null
+          question: string
+          thread_id: string | null
+          user_id: string
+        }
+        Insert: {
+          chart_config?: Json | null
+          chart_type?: string | null
+          created_at?: string
+          dataset_id: string
+          id?: string
+          insight_text?: string | null
+          question: string
+          thread_id?: string | null
+          user_id: string
+        }
+        Update: {
+          chart_config?: Json | null
+          chart_type?: string | null
+          created_at?: string
+          dataset_id?: string
+          id?: string
+          insight_text?: string | null
+          question?: string
+          thread_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insights_dataset_id_fkey"
+            columns: ["dataset_id"]
+            isOneToOne: false
+            referencedRelation: "datasets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insights_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+          name?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
