@@ -55,6 +55,21 @@ function AuthPage() {
     }
   };
 
+  const googleSignIn = async () => {
+    setBusy(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin + "/dashboard",
+      });
+      if (result.error) throw result.error;
+      if (result.redirected) return;
+      navigate({ to: "/dashboard", replace: true });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Google sign-in failed");
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="grid min-h-screen md:grid-cols-2">
       <div className="hidden flex-col justify-between p-12 md:flex">
