@@ -142,11 +142,11 @@ function UploadPage() {
                   </div>
                   <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                     {c.missing > 0 ? (
-                      <span className="flex items-center gap-1 text-amber-400">
+                      <span className="flex items-center gap-1 text-amber-700">
                         <AlertTriangle className="h-3 w-3" /> {c.missing} missing
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 text-emerald-400">
+                      <span className="flex items-center gap-1 text-emerald-700">
                         <CheckCircle2 className="h-3 w-3" /> complete
                       </span>
                     )}
