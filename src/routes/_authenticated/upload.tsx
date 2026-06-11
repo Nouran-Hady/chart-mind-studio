@@ -215,10 +215,14 @@ function UploadPage() {
               <h2 className="font-display text-lg font-semibold">Detected schema</h2>
               <button
                 onClick={save}
-                disabled={busy}
+                disabled={busy || selected.size === 0}
                 className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
               >
-                {busy ? "Saving…" : "Save & analyze"}
+                {busy
+                  ? "Saving…"
+                  : selected.size > 1
+                    ? `Save & analyze ${selected.size} sheets`
+                    : "Save & analyze"}
               </button>
             </div>
             <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
