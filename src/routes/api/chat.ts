@@ -257,11 +257,12 @@ function computeRequestedExactCalculations(
 }
 
 function findColumn(questionLower: string, schema: ColumnLite[], hints: string[]) {
-  const byMention = schema.find((c) => questionLower.includes(c.name.toLowerCase()));
-  if (byMention) return byMention;
+  const normalizedHints = hints.map((h) => h.toLowerCase());
+  const exact = schema.find((c) => normalizedHints.includes(c.name.toLowerCase()));
+  if (exact) return exact;
   return schema.find((c) => {
     const name = c.name.toLowerCase();
-    return hints.some((h) => name === h.toLowerCase() || questionLower.includes(h.toLowerCase()) && name.includes(h.toLowerCase()));
+    return normalizedHints.some((h) => questionLower.includes(h) && name.includes(h));
   });
 }
 
