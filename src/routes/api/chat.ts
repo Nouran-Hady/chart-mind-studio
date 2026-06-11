@@ -9,6 +9,7 @@ You answer questions about a user's tabular dataset (loaded from Excel/CSV).
 
 Rules:
 - Be concise and insight-driven. Lead with the answer, then a short explanation.
+- Exact counts/totals/top-N must come from EXACT AGGREGATES or REQUEST-SPECIFIC EXACT CALCULATION, never from sample rows or estimation.
 - When useful, include a Pandas-style pseudo-query in a fenced \`\`\`pandas block for transparency.
 - When a visualization would help, append a SINGLE fenced JSON block tagged \`chart\` describing the chart:
   \`\`\`chart
@@ -179,6 +180,7 @@ function computeDatasetStats(rows: Record<string, unknown>[], schema: ColumnLite
       const sum = nums.reduce((a, b) => a + b, 0);
       const sorted = [...nums].sort((a, b) => a - b);
       const median = sorted[Math.floor(sorted.length / 2)];
+      const valueCounts = countValues(values);
       out[col.name] = {
         type: "number",
         count: nums.length,
@@ -188,24 +190,78 @@ function computeDatasetStats(rows: Record<string, unknown>[], schema: ColumnLite
         sum,
         mean: sum / nums.length,
         median,
+        topValues: valueCounts.slice(0, 25).map(([value, count]) => ({ value, count })),
       };
     } else {
       // value_counts for low/medium cardinality (categorical, boolean, dates, ids)
-      const counts = new Map<string, number>();
-      for (const v of values) {
-        const k = String(v);
-        counts.set(k, (counts.get(k) ?? 0) + 1);
-      }
-      const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+      const sorted = countValues(values);
       out[col.name] = {
         type: col.type,
         count: values.length,
         missing,
-        unique: counts.size,
+        unique: sorted.length,
         topValues: sorted.slice(0, 25).map(([value, count]) => ({ value, count })),
       };
     }
   }
   return out;
+}
+
+function countValues(values: unknown[]) {
+  const counts = new Map<string, number>();
+  for (const v of values) {
+    const k = String(v);
+    counts.set(k, (counts.get(k) ?? 0) + 1);
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+}
+
+function computeRequestedExactCalculations(
+  question: string,
+  rows: Record<string, unknown>[],
+  schema: ColumnLite[] | null,
+) {
+  if (!question || !rows.length || !schema?.length) return null;
+  const q = question.toLowerCase();
+  const groupColumn = findColumn(q, schema, ["ATMID", "ATM", "terminal"]);
+  if (!groupColumn) return null;
+
+  const countColumn = findColumn(q, schema, ["UTRNNO"]);
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    const groupValue = row[groupColumn.name];
+    if (groupValue === null || groupValue === undefined || groupValue === "") continue;
+    if (countColumn) {
+      const countedValue = row[countColumn.name];
+      if (countedValue === null || countedValue === undefined || countedValue === "") continue;
+    }
+    const key = String(groupValue);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  const top = [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([value, count]) => ({ [groupColumn.name]: value, count }));
+  const topOne = top[0];
+  return JSON.stringify({
+    operation: countColumn
+      ? `groupby('${groupColumn.name}')['${countColumn.name}'].count().sort_values(desc).head(10)`
+      : `${groupColumn.name}.value_counts().head(10)`,
+    totalRowsUsed: rows.length,
+    groupColumn: groupColumn.name,
+    countedColumn: countColumn?.name ?? null,
+    top,
+    topOne,
+    topOneShareOfRows: topOne ? Number((topOne.count / rows.length).toFixed(6)) : null,
+  });
+}
+
+function findColumn(questionLower: string, schema: ColumnLite[], hints: string[]) {
+  const byMention = schema.find((c) => questionLower.includes(c.name.toLowerCase()));
+  if (byMention) return byMention;
+  return schema.find((c) => {
+    const name = c.name.toLowerCase();
+    return hints.some((h) => name === h.toLowerCase() || questionLower.includes(h.toLowerCase()) && name.includes(h.toLowerCase()));
+  });
 }
 
