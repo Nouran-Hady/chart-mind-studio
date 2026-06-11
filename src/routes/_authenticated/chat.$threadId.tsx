@@ -268,7 +268,15 @@ function ChatInner({
   );
 }
 
-function Message({ message }: { message: UIMessage }) {
+function Message({
+  message,
+  datasetId,
+  threadId,
+}: {
+  message: UIMessage;
+  datasetId: string;
+  threadId: string;
+}) {
   const text = message.parts
     .map((p) => (p.type === "text" ? p.text : ""))
     .join("");
@@ -303,7 +311,7 @@ function Message({ message }: { message: UIMessage }) {
           </div>
         )}
         {charts.map((c, i) => (
-          <ChartBlock key={i} config={c} />
+          <ChartBlock key={i} config={c} datasetId={datasetId} threadId={threadId} />
         ))}
       </div>
       {isUser && (
