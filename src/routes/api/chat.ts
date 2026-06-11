@@ -94,11 +94,8 @@ ${requestedExact ? `REQUEST-SPECIFIC EXACT CALCULATION (authoritative; use these
 Sample rows (first ${rowsForContext.length} of ${dataset.row_count}, for shape/context only — never derive counts or totals from this sample):
 ${JSON.stringify(rowsForContext)}`;
 
-        const key = process.env.LOVABLE_API_KEY;
-        if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
-
         if (deterministicAnswer) {
-          return createExactAnswerResponse({
+          return await createExactAnswerResponse({
             answer: deterministicAnswer,
             messages,
             threadId,
@@ -107,6 +104,9 @@ ${JSON.stringify(rowsForContext)}`;
             lastUserText,
           });
         }
+
+        const key = process.env.LOVABLE_API_KEY;
+        if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
 
         const gateway = createLovableAiGatewayProvider(key);
         const model = gateway("google/gemini-3-flash-preview");
@@ -185,6 +185,15 @@ ${JSON.stringify(rowsForContext)}`;
 
 // --- Exact aggregations over the full dataset -------------------------------
 type ColumnLite = { name: string; type: "number" | "string" | "date" | "boolean" };
+type RequestedExactCalculation = {
+  operation: string;
+  totalRowsUsed: number;
+  groupColumn: string;
+  countedColumn: string | null;
+  top: Array<{ value: string; count: number }>;
+  topOne: { value: string; count: number } | null;
+  topOneShareOfRows: number | null;
+};
 
 function computeDatasetStats(rows: Record<string, unknown>[], schema: ColumnLite[] | null) {
   if (!rows.length || !schema) return {};
