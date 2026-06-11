@@ -339,15 +339,49 @@ const COLORS = [
   "var(--chart-5)",
 ];
 
-function ChartBlock({ config }: { config: unknown }) {
+function ChartBlock({
+  config,
+  datasetId,
+  threadId,
+}: {
+  config: unknown;
+  datasetId: string;
+  threadId: string;
+}) {
   const c = config as ChartConfig;
+  const pin = useServerFn(pinChart);
   if (!c || !Array.isArray(c.data)) return null;
   const xKey = c.xKey ?? "label";
   const yKey = c.yKey ?? "value";
 
+  const handlePin = async () => {
+    try {
+      await pin({
+        data: {
+          datasetId,
+          threadId,
+          title: c.title ?? `${c.type} chart`,
+          chart_config: c,
+        },
+      });
+      toast.success("Pinned to dashboard");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to pin");
+    }
+  };
+
   return (
     <div className="glass-card rounded-xl p-4">
-      {c.title && <div className="mb-3 text-sm font-medium">{c.title}</div>}
+      <div className="mb-3 flex items-center justify-between gap-2">
+        {c.title ? <div className="text-sm font-medium">{c.title}</div> : <div />}
+        <button
+          onClick={handlePin}
+          className="print:hidden inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground hover:border-primary/40 hover:text-foreground"
+          title="Pin to dashboard"
+        >
+          <Pin className="h-3 w-3" /> Pin
+        </button>
+      </div>
       <div className="h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
           {c.type === "line" ? (
