@@ -62,13 +62,19 @@ export const Route = createFileRoute("/api/chat")({
           .single();
         if (dsErr || !dataset) return new Response("Dataset not found", { status: 404 });
 
-        const rowsForContext = Array.isArray(dataset.full_rows)
-          ? (dataset.full_rows as unknown[]).slice(0, 500)
+        const allRows = Array.isArray(dataset.full_rows)
+          ? (dataset.full_rows as Record<string, unknown>[])
           : [];
+        const rowsForContext = allRows.slice(0, 500);
+        const stats = computeDatasetStats(allRows, dataset.schema_json as ColumnLite[] | null);
 
         const datasetContext = `Dataset: "${dataset.name}" (${dataset.row_count} rows × ${dataset.column_count} cols)
 Schema: ${JSON.stringify(dataset.schema_json)}
-Rows (first ${rowsForContext.length} of ${dataset.row_count}):
+
+EXACT AGGREGATES (computed over ALL ${allRows.length} rows — use these for counts, sums, top-N, distributions; DO NOT estimate from the sample):
+${JSON.stringify(stats)}
+
+Sample rows (first ${rowsForContext.length} of ${dataset.row_count}, for shape/context only — never derive counts or totals from this sample):
 ${JSON.stringify(rowsForContext)}`;
 
         const key = process.env.LOVABLE_API_KEY;
