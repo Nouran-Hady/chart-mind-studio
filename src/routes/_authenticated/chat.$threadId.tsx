@@ -221,7 +221,7 @@ function ChatInner({
           )}
 
           {messages.map((m) => (
-            <Message key={m.id} message={m} />
+            <Message key={m.id} message={m} datasetId={datasetId} threadId={threadId} />
           ))}
 
           {busy && messages[messages.length - 1]?.role !== "assistant" && (
