@@ -26,11 +26,17 @@ function DatasetDetail() {
   const del = useServerFn(deleteThread);
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const insightsFn = useServerFn(computeAutoInsights);
 
   const ds = useQuery({ queryKey: ["dataset", datasetId], queryFn: () => get({ data: { id: datasetId } }) });
   const threads = useQuery({
     queryKey: ["threads", datasetId],
     queryFn: () => list({ data: { datasetId } }),
+  });
+  const autoInsights = useQuery({
+    queryKey: ["auto-insights", datasetId],
+    queryFn: () => insightsFn({ data: { datasetId } }),
+    staleTime: 5 * 60 * 1000,
   });
 
   const createMut = useMutation({
