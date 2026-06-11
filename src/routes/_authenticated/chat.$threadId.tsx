@@ -11,7 +11,11 @@ import {
   Sparkles,
   StopCircle,
   User as UserIcon,
+  Pin,
+  Printer,
 } from "lucide-react";
+import { pinChart } from "@/lib/pinned.functions";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart,
