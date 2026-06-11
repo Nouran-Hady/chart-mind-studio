@@ -1,5 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { convertToModelMessages, streamText, type UIMessage } from "ai";
+import {
+  convertToModelMessages,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+  streamText,
+  type UIMessage,
+} from "ai";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -75,6 +81,7 @@ export const Route = createFileRoute("/api/chat")({
             ?.map((p) => (p.type === "text" ? p.text : ""))
             .join("") ?? "";
         const requestedExact = computeRequestedExactCalculations(lastUserText, allRows, schema);
+        const deterministicAnswer = buildDeterministicAnswer(requestedExact, dataset.row_count);
 
         const datasetContext = `Dataset: "${dataset.name}" (${dataset.row_count} rows × ${dataset.column_count} cols)
 Schema: ${JSON.stringify(dataset.schema_json)}
@@ -82,13 +89,24 @@ Schema: ${JSON.stringify(dataset.schema_json)}
 EXACT AGGREGATES (computed over ALL ${allRows.length} rows — use these for counts, sums, top-N, distributions; DO NOT estimate from the sample):
 ${JSON.stringify(stats)}
 
-${requestedExact ? `REQUEST-SPECIFIC EXACT CALCULATION (authoritative; use these exact counts in the answer):\n${requestedExact}\n` : ""}
+${requestedExact ? `REQUEST-SPECIFIC EXACT CALCULATION (authoritative; use these exact counts in the answer):\n${JSON.stringify(requestedExact)}\n` : ""}
 
 Sample rows (first ${rowsForContext.length} of ${dataset.row_count}, for shape/context only — never derive counts or totals from this sample):
 ${JSON.stringify(rowsForContext)}`;
 
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
+
+        if (deterministicAnswer) {
+          return createExactAnswerResponse({
+            answer: deterministicAnswer,
+            messages,
+            threadId,
+            userId,
+            datasetId,
+            lastUserText,
+          });
+        }
 
         const gateway = createLovableAiGatewayProvider(key);
         const model = gateway("google/gemini-3-flash-preview");
