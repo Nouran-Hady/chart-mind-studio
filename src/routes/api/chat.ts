@@ -320,6 +320,25 @@ function countValues(values: unknown[]) {
   return [...counts.entries()].sort((a, b) => b[1] - a[1]);
 }
 
+function buildDeterministicAnswer(exact: RequestedExactCalculation | null, declaredRowCount: number) {
+  if (!exact?.topOne) return null;
+  const share = exact.topOneShareOfRows === null ? null : (exact.topOneShareOfRows * 100).toFixed(1);
+  const topRows = exact.top
+    .map((r, i) => `${i + 1}. ${r.value}: ${r.count.toLocaleString()}`)
+    .join("\n");
+  const basis = exact.countedColumn
+    ? `non-empty ${exact.countedColumn} records grouped by ${exact.groupColumn}`
+    : `${exact.groupColumn} records`;
+  return `${exact.groupColumn} ${exact.topOne.value} has the highest transaction count: **${exact.topOne.count.toLocaleString()}** ${basis}.${share ? ` That is **${share}%** of the ${declaredRowCount.toLocaleString()} rows in this dataset.` : ""}
+
+Top ${exact.top.length}:
+${topRows}
+
+\`\`\`pandas
+${exact.operation}
+\`\`\``;
+}
+
 function computeRequestedExactCalculations(
   question: string,
   rows: Record<string, unknown>[],
@@ -345,7 +364,7 @@ function computeRequestedExactCalculations(
   const top = [...counts.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10)
-    .map(([value, count]) => ({ [groupColumn.name]: value, count }));
+    .map(([value, count]) => ({ value, count }));
   const topOne = top[0];
   return JSON.stringify({
     operation: countColumn
