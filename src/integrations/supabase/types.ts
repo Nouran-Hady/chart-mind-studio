@@ -183,6 +183,54 @@ export type Database = {
           },
         ]
       }
+      pinned_charts: {
+        Row: {
+          chart_config: Json
+          created_at: string
+          dataset_id: string
+          id: string
+          note: string | null
+          thread_id: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          chart_config: Json
+          created_at?: string
+          dataset_id: string
+          id?: string
+          note?: string | null
+          thread_id?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          chart_config?: Json
+          created_at?: string
+          dataset_id?: string
+          id?: string
+          note?: string | null
+          thread_id?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pinned_charts_dataset_id_fkey"
+            columns: ["dataset_id"]
+            isOneToOne: false
+            referencedRelation: "datasets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pinned_charts_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string

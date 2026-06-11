@@ -11,7 +11,11 @@ import {
   Sparkles,
   StopCircle,
   User as UserIcon,
+  Pin,
+  Printer,
 } from "lucide-react";
+import { pinChart } from "@/lib/pinned.functions";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart,
@@ -158,18 +162,37 @@ function ChatInner({
           <span className="text-muted-foreground">·</span>
           <div className="font-medium">{datasetName}</div>
         </div>
-        {busy && (
-          <button
-            onClick={() => stop()}
+        <div className="flex items-center gap-2">
+          {busy && (
+            <button
+              onClick={() => stop()}
+              className="flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <StopCircle className="h-3.5 w-3.5" /> Stop
+            </button>
+          )}
+          <Link
+            to="/board/$datasetId"
+            params={{ datasetId }}
             className="flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
           >
-            <StopCircle className="h-3.5 w-3.5" /> Stop
+            <Pin className="h-3.5 w-3.5" /> Dashboard
+          </Link>
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <Printer className="h-3.5 w-3.5" /> Export PDF
           </button>
-        )}
+        </div>
       </header>
 
-      <div ref={scrollRef} className="overflow-y-auto">
+      <div ref={scrollRef} className="overflow-y-auto print:overflow-visible">
         <div className="mx-auto max-w-3xl space-y-6 px-6 py-8">
+          <div className="hidden print:block">
+            <h1 className="font-display text-2xl font-semibold">{datasetName}</h1>
+            <p className="text-sm text-muted-foreground">Exported {new Date().toLocaleString()}</p>
+          </div>
           {messages.length === 0 && (
             <div className="space-y-6">
               <div className="text-center">
@@ -198,7 +221,7 @@ function ChatInner({
           )}
 
           {messages.map((m) => (
-            <Message key={m.id} message={m} />
+            <Message key={m.id} message={m} datasetId={datasetId} threadId={threadId} />
           ))}
 
           {busy && messages[messages.length - 1]?.role !== "assistant" && (
@@ -245,7 +268,15 @@ function ChatInner({
   );
 }
 
-function Message({ message }: { message: UIMessage }) {
+function Message({
+  message,
+  datasetId,
+  threadId,
+}: {
+  message: UIMessage;
+  datasetId: string;
+  threadId: string;
+}) {
   const text = message.parts
     .map((p) => (p.type === "text" ? p.text : ""))
     .join("");
@@ -280,7 +311,7 @@ function Message({ message }: { message: UIMessage }) {
           </div>
         )}
         {charts.map((c, i) => (
-          <ChartBlock key={i} config={c} />
+          <ChartBlock key={i} config={c} datasetId={datasetId} threadId={threadId} />
         ))}
       </div>
       {isUser && (
@@ -308,15 +339,49 @@ const COLORS = [
   "var(--chart-5)",
 ];
 
-function ChartBlock({ config }: { config: unknown }) {
+function ChartBlock({
+  config,
+  datasetId,
+  threadId,
+}: {
+  config: unknown;
+  datasetId: string;
+  threadId: string;
+}) {
   const c = config as ChartConfig;
+  const pin = useServerFn(pinChart);
   if (!c || !Array.isArray(c.data)) return null;
   const xKey = c.xKey ?? "label";
   const yKey = c.yKey ?? "value";
 
+  const handlePin = async () => {
+    try {
+      await pin({
+        data: {
+          datasetId,
+          threadId,
+          title: c.title ?? `${c.type} chart`,
+          chart_config: c,
+        },
+      });
+      toast.success("Pinned to dashboard");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to pin");
+    }
+  };
+
   return (
     <div className="glass-card rounded-xl p-4">
-      {c.title && <div className="mb-3 text-sm font-medium">{c.title}</div>}
+      <div className="mb-3 flex items-center justify-between gap-2">
+        {c.title ? <div className="text-sm font-medium">{c.title}</div> : <div />}
+        <button
+          onClick={handlePin}
+          className="print:hidden inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground hover:border-primary/40 hover:text-foreground"
+          title="Pin to dashboard"
+        >
+          <Pin className="h-3 w-3" /> Pin
+        </button>
+      </div>
       <div className="h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
           {c.type === "line" ? (

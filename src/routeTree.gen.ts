@@ -19,6 +19,7 @@ import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDatasetsIndexRouteImport } from './routes/_authenticated/datasets.index'
 import { Route as AuthenticatedDatasetsDatasetIdRouteImport } from './routes/_authenticated/datasets.$datasetId'
 import { Route as AuthenticatedChatThreadIdRouteImport } from './routes/_authenticated/chat.$threadId'
+import { Route as AuthenticatedBoardDatasetIdRouteImport } from './routes/_authenticated/board.$datasetId'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -72,6 +73,12 @@ const AuthenticatedChatThreadIdRoute =
     path: '/chat/$threadId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedBoardDatasetIdRoute =
+  AuthenticatedBoardDatasetIdRouteImport.update({
+    id: '/board/$datasetId',
+    path: '/board/$datasetId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/upload': typeof AuthenticatedUploadRoute
   '/api/chat': typeof ApiChatRoute
+  '/board/$datasetId': typeof AuthenticatedBoardDatasetIdRoute
   '/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/datasets/$datasetId': typeof AuthenticatedDatasetsDatasetIdRoute
   '/datasets/': typeof AuthenticatedDatasetsIndexRoute
@@ -91,6 +99,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/upload': typeof AuthenticatedUploadRoute
   '/api/chat': typeof ApiChatRoute
+  '/board/$datasetId': typeof AuthenticatedBoardDatasetIdRoute
   '/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/datasets/$datasetId': typeof AuthenticatedDatasetsDatasetIdRoute
   '/datasets': typeof AuthenticatedDatasetsIndexRoute
@@ -104,6 +113,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/upload': typeof AuthenticatedUploadRoute
   '/api/chat': typeof ApiChatRoute
+  '/_authenticated/board/$datasetId': typeof AuthenticatedBoardDatasetIdRoute
   '/_authenticated/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/_authenticated/datasets/$datasetId': typeof AuthenticatedDatasetsDatasetIdRoute
   '/_authenticated/datasets/': typeof AuthenticatedDatasetsIndexRoute
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/upload'
     | '/api/chat'
+    | '/board/$datasetId'
     | '/chat/$threadId'
     | '/datasets/$datasetId'
     | '/datasets/'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/upload'
     | '/api/chat'
+    | '/board/$datasetId'
     | '/chat/$threadId'
     | '/datasets/$datasetId'
     | '/datasets'
@@ -140,6 +152,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/upload'
     | '/api/chat'
+    | '/_authenticated/board/$datasetId'
     | '/_authenticated/chat/$threadId'
     | '/_authenticated/datasets/$datasetId'
     | '/_authenticated/datasets/'
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatThreadIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/board/$datasetId': {
+      id: '/_authenticated/board/$datasetId'
+      path: '/board/$datasetId'
+      fullPath: '/board/$datasetId'
+      preLoaderRoute: typeof AuthenticatedBoardDatasetIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -231,6 +251,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedUploadRoute: typeof AuthenticatedUploadRoute
+  AuthenticatedBoardDatasetIdRoute: typeof AuthenticatedBoardDatasetIdRoute
   AuthenticatedChatThreadIdRoute: typeof AuthenticatedChatThreadIdRoute
   AuthenticatedDatasetsDatasetIdRoute: typeof AuthenticatedDatasetsDatasetIdRoute
   AuthenticatedDatasetsIndexRoute: typeof AuthenticatedDatasetsIndexRoute
@@ -240,6 +261,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedUploadRoute: AuthenticatedUploadRoute,
+  AuthenticatedBoardDatasetIdRoute: AuthenticatedBoardDatasetIdRoute,
   AuthenticatedChatThreadIdRoute: AuthenticatedChatThreadIdRoute,
   AuthenticatedDatasetsDatasetIdRoute: AuthenticatedDatasetsDatasetIdRoute,
   AuthenticatedDatasetsIndexRoute: AuthenticatedDatasetsIndexRoute,
@@ -258,13 +280,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

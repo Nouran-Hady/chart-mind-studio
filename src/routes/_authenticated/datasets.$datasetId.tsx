@@ -7,9 +7,11 @@ import {
   createThread,
   deleteThread,
 } from "@/lib/datasets.functions";
-import { Plus, MessageSquare, Trash2, AlertTriangle, CheckCircle2, ArrowLeft } from "lucide-react";
+import { computeAutoInsights } from "@/lib/pinned.functions";
+import { Plus, MessageSquare, Trash2, AlertTriangle, CheckCircle2, ArrowLeft, Sparkles, LayoutDashboard, TrendingUp, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import type { ColumnSchema } from "@/lib/dataset-utils";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export const Route = createFileRoute("/_authenticated/datasets/$datasetId")({
   head: () => ({ meta: [{ title: "Dataset — InsightAI" }] }),
@@ -24,11 +26,17 @@ function DatasetDetail() {
   const del = useServerFn(deleteThread);
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const insightsFn = useServerFn(computeAutoInsights);
 
   const ds = useQuery({ queryKey: ["dataset", datasetId], queryFn: () => get({ data: { id: datasetId } }) });
   const threads = useQuery({
     queryKey: ["threads", datasetId],
     queryFn: () => list({ data: { datasetId } }),
+  });
+  const autoInsights = useQuery({
+    queryKey: ["auto-insights", datasetId],
+    queryFn: () => insightsFn({ data: { datasetId } }),
+    staleTime: 5 * 60 * 1000,
   });
 
   const createMut = useMutation({
@@ -67,14 +75,39 @@ function DatasetDetail() {
             {ds.data.missing_values} missing values
           </p>
         </div>
-        <button
-          onClick={() => createMut.mutate()}
-          disabled={createMut.isPending}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-        >
-          <Plus className="h-4 w-4" /> New conversation
-        </button>
+        <div className="flex gap-2">
+          <Link
+            to="/board/$datasetId"
+            params={{ datasetId }}
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:border-primary/40"
+          >
+            <LayoutDashboard className="h-4 w-4" /> Dashboard
+          </Link>
+          <button
+            onClick={() => createMut.mutate()}
+            disabled={createMut.isPending}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+          >
+            <Plus className="h-4 w-4" /> New conversation
+          </button>
+        </div>
       </header>
+
+      <section className="glass-card rounded-2xl p-5">
+        <div className="mb-3 flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          <h2 className="font-display text-lg font-semibold">Auto insights</h2>
+          <span className="text-xs text-muted-foreground">Generated from your full dataset</span>
+        </div>
+        {autoInsights.isLoading && <div className="text-sm text-muted-foreground">Crunching…</div>}
+        {autoInsights.data && (
+          <div className="grid gap-3 md:grid-cols-2">
+            {autoInsights.data.map((ins) => (
+              <InsightCard key={ins.id} insight={ins} />
+            ))}
+          </div>
+        )}
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
@@ -169,6 +202,51 @@ function DatasetDetail() {
           ))}
         </aside>
       </div>
+    </div>
+  );
+}
+
+type AutoInsight = {
+  id: string;
+  kind: "top-value" | "outlier" | "missing" | "distribution" | "trend" | "summary";
+  title: string;
+  description: string;
+  chart?: {
+    type: "bar" | "line" | "pie";
+    xKey: string;
+    yKey: string;
+    data: Array<{ label: string; value: number }>;
+  };
+};
+
+function InsightCard({ insight }: { insight: AutoInsight }) {
+  const Icon =
+    insight.kind === "outlier" ? AlertCircle :
+    insight.kind === "missing" ? AlertTriangle :
+    insight.kind === "top-value" ? TrendingUp :
+    Sparkles;
+  return (
+    <div className="rounded-xl border border-border bg-card/50 p-4">
+      <div className="flex items-start gap-2">
+        <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-medium">{insight.title}</div>
+          <div className="mt-1 text-xs text-muted-foreground">{insight.description}</div>
+        </div>
+      </div>
+      {insight.chart && insight.chart.data.length > 0 && (
+        <div className="mt-3 h-40 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={insight.chart.data}>
+              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+              <XAxis dataKey="label" stroke="var(--muted-foreground)" fontSize={10} />
+              <YAxis stroke="var(--muted-foreground)" fontSize={10} />
+              <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", fontSize: 12 }} />
+              <Bar dataKey="value" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 }

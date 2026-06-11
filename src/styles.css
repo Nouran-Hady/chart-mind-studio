@@ -108,3 +108,12 @@
   border: 1px solid rgba(166,124,82,0.15);
   backdrop-filter: blur(8px);
 }
+
+@media print {
+  @page { size: A4; margin: 14mm; }
+  body { background: white !important; }
+  .glass-card { background: white !important; border-color: #ddd !important; box-shadow: none !important; }
+  .print\:hidden { display: none !important; }
+  header { background: white !important; }
+  .recharts-wrapper { page-break-inside: avoid; }
+}
