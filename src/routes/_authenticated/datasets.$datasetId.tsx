@@ -205,3 +205,48 @@ function DatasetDetail() {
     </div>
   );
 }
+
+type AutoInsight = {
+  id: string;
+  kind: "top-value" | "outlier" | "missing" | "distribution" | "trend" | "summary";
+  title: string;
+  description: string;
+  chart?: {
+    type: "bar" | "line" | "pie";
+    xKey: string;
+    yKey: string;
+    data: Array<{ label: string; value: number }>;
+  };
+};
+
+function InsightCard({ insight }: { insight: AutoInsight }) {
+  const Icon =
+    insight.kind === "outlier" ? AlertCircle :
+    insight.kind === "missing" ? AlertTriangle :
+    insight.kind === "top-value" ? TrendingUp :
+    Sparkles;
+  return (
+    <div className="rounded-xl border border-border bg-card/50 p-4">
+      <div className="flex items-start gap-2">
+        <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-medium">{insight.title}</div>
+          <div className="mt-1 text-xs text-muted-foreground">{insight.description}</div>
+        </div>
+      </div>
+      {insight.chart && insight.chart.data.length > 0 && (
+        <div className="mt-3 h-40 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={insight.chart.data}>
+              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+              <XAxis dataKey="label" stroke="var(--muted-foreground)" fontSize={10} />
+              <YAxis stroke="var(--muted-foreground)" fontSize={10} />
+              <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", fontSize: 12 }} />
+              <Bar dataKey="value" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </div>
+  );
+}
