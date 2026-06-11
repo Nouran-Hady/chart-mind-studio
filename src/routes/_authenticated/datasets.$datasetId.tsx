@@ -7,9 +7,11 @@ import {
   createThread,
   deleteThread,
 } from "@/lib/datasets.functions";
-import { Plus, MessageSquare, Trash2, AlertTriangle, CheckCircle2, ArrowLeft } from "lucide-react";
+import { computeAutoInsights } from "@/lib/pinned.functions";
+import { Plus, MessageSquare, Trash2, AlertTriangle, CheckCircle2, ArrowLeft, Sparkles, LayoutDashboard, TrendingUp, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import type { ColumnSchema } from "@/lib/dataset-utils";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export const Route = createFileRoute("/_authenticated/datasets/$datasetId")({
   head: () => ({ meta: [{ title: "Dataset — InsightAI" }] }),
