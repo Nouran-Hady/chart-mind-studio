@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { parseFile, type ParsedDataset } from "@/lib/dataset-utils";
+import { parseWorkbook, type ParsedSheet } from "@/lib/dataset-utils";
 import { createDataset } from "@/lib/datasets.functions";
-import { Upload, FileSpreadsheet, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle2, AlertTriangle, Layers } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -17,19 +17,36 @@ function UploadPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
-  const [parsed, setParsed] = useState<ParsedDataset | null>(null);
+  const [sheets, setSheets] = useState<ParsedSheet[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [activeSheet, setActiveSheet] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
 
+  const parsed = useMemo(
+    () => sheets.find((s) => s.sheetName === activeSheet) ?? null,
+    [sheets, activeSheet],
+  );
+
   const handleFile = useCallback(async (f: File) => {
     setFile(f);
-    setParsed(null);
+    setSheets([]);
+    setSelected(new Set());
+    setActiveSheet(null);
     setBusy(true);
     const t = toast.loading(`Parsing ${f.name}…`);
     try {
-      const p = await parseFile(f);
-      setParsed(p);
-      toast.success(`Detected ${p.columnCount} columns and ${p.rowCount} rows`, { id: t });
+      const wb = await parseWorkbook(f);
+      if (!wb.sheets.length) throw new Error("No data found in file");
+      setSheets(wb.sheets);
+      setSelected(new Set(wb.sheets.map((s) => s.sheetName)));
+      setActiveSheet(wb.sheets[0].sheetName);
+      toast.success(
+        wb.sheets.length === 1
+          ? `Detected ${wb.sheets[0].columnCount} columns and ${wb.sheets[0].rowCount} rows`
+          : `Found ${wb.sheets.length} sheets — choose which to analyze`,
+        { id: t },
+      );
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not parse file", { id: t });
     } finally {
@@ -44,27 +61,48 @@ function UploadPage() {
     if (f) handleFile(f);
   };
 
+  const toggleSheet = (name: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  };
+
   const save = async () => {
-    if (!parsed || !file) return;
+    if (!file || selected.size === 0) return;
+    const chosen = sheets.filter((s) => selected.has(s.sheetName));
     setBusy(true);
-    const t = toast.loading("Saving dataset & generating summary…");
+    const t = toast.loading(
+      chosen.length > 1 ? `Saving ${chosen.length} datasets…` : "Saving dataset…",
+    );
+    const baseName = file.name.replace(/\.[^.]+$/, "");
     try {
-      const ds = await create({
-        data: {
-          name: file.name.replace(/\.[^.]+$/, ""),
-          filename: file.name,
-          file_size: file.size,
-          row_count: parsed.rowCount,
-          column_count: parsed.columnCount,
-          missing_values: parsed.missingValues,
-          schema_json: parsed.schema,
-          sample_rows: parsed.rows.slice(0, 100),
-          full_rows: parsed.rows.slice(0, 1000),
-        },
-      });
+      let lastId: string | null = null;
+      for (const s of chosen) {
+        const name = chosen.length > 1 ? `${baseName} — ${s.sheetName}` : baseName;
+        const ds = await create({
+          data: {
+            name,
+            filename: file.name,
+            file_size: file.size,
+            row_count: s.rowCount,
+            column_count: s.columnCount,
+            missing_values: s.missingValues,
+            schema_json: s.schema,
+            sample_rows: s.rows.slice(0, 100),
+            full_rows: s.rows.slice(0, 1000),
+          },
+        });
+        lastId = ds.id;
+      }
       qc.invalidateQueries({ queryKey: ["datasets"] });
-      toast.success("Dataset ready", { id: t });
-      navigate({ to: "/datasets/$datasetId", params: { datasetId: ds.id } });
+      toast.success(chosen.length > 1 ? "Datasets ready" : "Dataset ready", { id: t });
+      if (lastId) {
+        if (chosen.length > 1) navigate({ to: "/datasets" });
+        else navigate({ to: "/datasets/$datasetId", params: { datasetId: lastId } });
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Save failed", { id: t });
     } finally {
