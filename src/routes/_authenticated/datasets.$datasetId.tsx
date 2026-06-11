@@ -75,14 +75,39 @@ function DatasetDetail() {
             {ds.data.missing_values} missing values
           </p>
         </div>
-        <button
-          onClick={() => createMut.mutate()}
-          disabled={createMut.isPending}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-        >
-          <Plus className="h-4 w-4" /> New conversation
-        </button>
+        <div className="flex gap-2">
+          <Link
+            to="/board/$datasetId"
+            params={{ datasetId }}
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:border-primary/40"
+          >
+            <LayoutDashboard className="h-4 w-4" /> Dashboard
+          </Link>
+          <button
+            onClick={() => createMut.mutate()}
+            disabled={createMut.isPending}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+          >
+            <Plus className="h-4 w-4" /> New conversation
+          </button>
+        </div>
       </header>
+
+      <section className="glass-card rounded-2xl p-5">
+        <div className="mb-3 flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          <h2 className="font-display text-lg font-semibold">Auto insights</h2>
+          <span className="text-xs text-muted-foreground">Generated from your full dataset</span>
+        </div>
+        {autoInsights.isLoading && <div className="text-sm text-muted-foreground">Crunching…</div>}
+        {autoInsights.data && (
+          <div className="grid gap-3 md:grid-cols-2">
+            {autoInsights.data.map((ins) => (
+              <InsightCard key={ins.id} insight={ins} />
+            ))}
+          </div>
+        )}
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
