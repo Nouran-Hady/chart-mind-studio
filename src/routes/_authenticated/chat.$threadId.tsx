@@ -162,18 +162,37 @@ function ChatInner({
           <span className="text-muted-foreground">·</span>
           <div className="font-medium">{datasetName}</div>
         </div>
-        {busy && (
-          <button
-            onClick={() => stop()}
+        <div className="flex items-center gap-2">
+          {busy && (
+            <button
+              onClick={() => stop()}
+              className="flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <StopCircle className="h-3.5 w-3.5" /> Stop
+            </button>
+          )}
+          <Link
+            to="/board/$datasetId"
+            params={{ datasetId }}
             className="flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
           >
-            <StopCircle className="h-3.5 w-3.5" /> Stop
+            <Pin className="h-3.5 w-3.5" /> Dashboard
+          </Link>
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <Printer className="h-3.5 w-3.5" /> Export PDF
           </button>
-        )}
+        </div>
       </header>
 
-      <div ref={scrollRef} className="overflow-y-auto">
+      <div ref={scrollRef} className="overflow-y-auto print:overflow-visible">
         <div className="mx-auto max-w-3xl space-y-6 px-6 py-8">
+          <div className="hidden print:block">
+            <h1 className="font-display text-2xl font-semibold">{datasetName}</h1>
+            <p className="text-sm text-muted-foreground">Exported {new Date().toLocaleString()}</p>
+          </div>
           {messages.length === 0 && (
             <div className="space-y-6">
               <div className="text-center">
