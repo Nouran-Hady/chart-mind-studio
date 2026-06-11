@@ -62,13 +62,19 @@ export const Route = createFileRoute("/api/chat")({
           .single();
         if (dsErr || !dataset) return new Response("Dataset not found", { status: 404 });
 
-        const rowsForContext = Array.isArray(dataset.full_rows)
-          ? (dataset.full_rows as unknown[]).slice(0, 500)
+        const allRows = Array.isArray(dataset.full_rows)
+          ? (dataset.full_rows as Record<string, unknown>[])
           : [];
+        const rowsForContext = allRows.slice(0, 500);
+        const stats = computeDatasetStats(allRows, dataset.schema_json as ColumnLite[] | null);
 
         const datasetContext = `Dataset: "${dataset.name}" (${dataset.row_count} rows × ${dataset.column_count} cols)
 Schema: ${JSON.stringify(dataset.schema_json)}
-Rows (first ${rowsForContext.length} of ${dataset.row_count}):
+
+EXACT AGGREGATES (computed over ALL ${allRows.length} rows — use these for counts, sums, top-N, distributions; DO NOT estimate from the sample):
+${JSON.stringify(stats)}
+
+Sample rows (first ${rowsForContext.length} of ${dataset.row_count}, for shape/context only — never derive counts or totals from this sample):
 ${JSON.stringify(rowsForContext)}`;
 
         const key = process.env.LOVABLE_API_KEY;
@@ -153,3 +159,49 @@ ${JSON.stringify(rowsForContext)}`;
     },
   },
 });
+
+// --- Exact aggregations over the full dataset -------------------------------
+type ColumnLite = { name: string; type: "number" | "string" | "date" | "boolean" };
+
+function computeDatasetStats(rows: Record<string, unknown>[], schema: ColumnLite[] | null) {
+  if (!rows.length || !schema) return {};
+  const out: Record<string, unknown> = { totalRows: rows.length };
+  for (const col of schema) {
+    const values = rows.map((r) => r[col.name]).filter((v) => v !== null && v !== undefined && v !== "");
+    const missing = rows.length - values.length;
+    if (col.type === "number") {
+      const nums = values.map((v) => Number(v)).filter((n) => Number.isFinite(n));
+      if (!nums.length) { out[col.name] = { type: "number", missing, count: 0 }; continue; }
+      const sum = nums.reduce((a, b) => a + b, 0);
+      const sorted = [...nums].sort((a, b) => a - b);
+      const median = sorted[Math.floor(sorted.length / 2)];
+      out[col.name] = {
+        type: "number",
+        count: nums.length,
+        missing,
+        min: sorted[0],
+        max: sorted[sorted.length - 1],
+        sum,
+        mean: sum / nums.length,
+        median,
+      };
+    } else {
+      // value_counts for low/medium cardinality (categorical, boolean, dates, ids)
+      const counts = new Map<string, number>();
+      for (const v of values) {
+        const k = String(v);
+        counts.set(k, (counts.get(k) ?? 0) + 1);
+      }
+      const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+      out[col.name] = {
+        type: col.type,
+        count: values.length,
+        missing,
+        unique: counts.size,
+        topValues: sorted.slice(0, 25).map(([value, count]) => ({ value, count })),
+      };
+    }
+  }
+  return out;
+}
+

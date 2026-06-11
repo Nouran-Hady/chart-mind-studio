@@ -92,7 +92,7 @@ function UploadPage() {
             missing_values: s.missingValues,
             schema_json: s.schema,
             sample_rows: s.rows.slice(0, 100),
-            full_rows: s.rows.slice(0, 1000),
+            full_rows: s.rows,
           },
         });
         lastId = ds.id;
