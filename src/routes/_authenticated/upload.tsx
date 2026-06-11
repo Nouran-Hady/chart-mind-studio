@@ -142,8 +142,60 @@ function UploadPage() {
         />
       </label>
 
+      {sheets.length > 1 && (
+        <div className="glass-card rounded-2xl p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <Layers className="h-4 w-4 text-primary" />
+            <h2 className="font-display text-lg font-semibold">
+              Choose sheets to analyze ({selected.size}/{sheets.length})
+            </h2>
+          </div>
+          <p className="mb-3 text-sm text-muted-foreground">
+            This workbook has multiple sheets. Pick which ones to import — each becomes its own
+            dataset. Click a sheet name to preview it below.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {sheets.map((s) => {
+              const isActive = s.sheetName === activeSheet;
+              const isSelected = selected.has(s.sheetName);
+              return (
+                <div
+                  key={s.sheetName}
+                  className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
+                    isActive
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-card/50 hover:border-primary/50"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleSheet(s.sheetName)}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  <button
+                    onClick={() => setActiveSheet(s.sheetName)}
+                    className="font-medium"
+                  >
+                    {s.sheetName}
+                  </button>
+                  <span className="text-xs text-muted-foreground">
+                    {s.rowCount}×{s.columnCount}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {parsed && (
         <>
+          {sheets.length > 1 && (
+            <div className="text-sm text-muted-foreground">
+              Previewing sheet: <span className="font-medium text-foreground">{parsed.sheetName}</span>
+            </div>
+          )}
           <div className="grid gap-3 md:grid-cols-4">
             <Metric label="Rows" value={parsed.rowCount.toLocaleString()} />
             <Metric label="Columns" value={parsed.columnCount} />
