@@ -159,3 +159,49 @@ ${JSON.stringify(rowsForContext)}`;
     },
   },
 });
+
+// --- Exact aggregations over the full dataset -------------------------------
+type ColumnLite = { name: string; type: "number" | "string" | "date" | "boolean" };
+
+function computeDatasetStats(rows: Record<string, unknown>[], schema: ColumnLite[] | null) {
+  if (!rows.length || !schema) return {};
+  const out: Record<string, unknown> = { totalRows: rows.length };
+  for (const col of schema) {
+    const values = rows.map((r) => r[col.name]).filter((v) => v !== null && v !== undefined && v !== "");
+    const missing = rows.length - values.length;
+    if (col.type === "number") {
+      const nums = values.map((v) => Number(v)).filter((n) => Number.isFinite(n));
+      if (!nums.length) { out[col.name] = { type: "number", missing, count: 0 }; continue; }
+      const sum = nums.reduce((a, b) => a + b, 0);
+      const sorted = [...nums].sort((a, b) => a - b);
+      const median = sorted[Math.floor(sorted.length / 2)];
+      out[col.name] = {
+        type: "number",
+        count: nums.length,
+        missing,
+        min: sorted[0],
+        max: sorted[sorted.length - 1],
+        sum,
+        mean: sum / nums.length,
+        median,
+      };
+    } else {
+      // value_counts for low/medium cardinality (categorical, boolean, dates, ids)
+      const counts = new Map<string, number>();
+      for (const v of values) {
+        const k = String(v);
+        counts.set(k, (counts.get(k) ?? 0) + 1);
+      }
+      const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+      out[col.name] = {
+        type: col.type,
+        count: values.length,
+        missing,
+        unique: counts.size,
+        topValues: sorted.slice(0, 25).map(([value, count]) => ({ value, count })),
+      };
+    }
+  }
+  return out;
+}
+
