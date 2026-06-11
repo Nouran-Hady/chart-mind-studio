@@ -346,6 +346,9 @@ function computeRequestedExactCalculations(
 ) {
   if (!question || !rows.length || !schema?.length) return null;
   const q = question.toLowerCase();
+  const asksForAtm = /\b(atm|atmid|terminal)\b/.test(q);
+  const asksForCount = /(top|highest|most|count|number of|processed|transactions|value_counts|groupby)/.test(q);
+  if (!asksForAtm || !asksForCount) return null;
   const groupColumn = findColumn(q, schema, ["ATMID", "ATM", "terminal"]);
   if (!groupColumn) return null;
 
