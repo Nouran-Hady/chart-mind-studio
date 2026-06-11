@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { createClient } from "@supabase/supabase-js";
 
 const SYSTEM_PROMPT = `You are InsightAI, a senior data analyst built into a self-serve BI tool.
@@ -66,13 +65,23 @@ export const Route = createFileRoute("/api/chat")({
           ? (dataset.full_rows as Record<string, unknown>[])
           : [];
         const rowsForContext = allRows.slice(0, 500);
-        const stats = computeDatasetStats(allRows, dataset.schema_json as ColumnLite[] | null);
+        const schema = dataset.schema_json as ColumnLite[] | null;
+        const stats = computeDatasetStats(allRows, schema);
+
+        const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
+        const lastUserText =
+          lastUserMessage?.parts
+            ?.map((p) => (p.type === "text" ? p.text : ""))
+            .join("") ?? "";
+        const requestedExact = computeRequestedExactCalculations(lastUserText, allRows, schema);
 
         const datasetContext = `Dataset: "${dataset.name}" (${dataset.row_count} rows × ${dataset.column_count} cols)
 Schema: ${JSON.stringify(dataset.schema_json)}
 
 EXACT AGGREGATES (computed over ALL ${allRows.length} rows — use these for counts, sums, top-N, distributions; DO NOT estimate from the sample):
 ${JSON.stringify(stats)}
+
+${requestedExact ? `REQUEST-SPECIFIC EXACT CALCULATION (authoritative; use these exact counts in the answer):\n${requestedExact}\n` : ""}
 
 Sample rows (first ${rowsForContext.length} of ${dataset.row_count}, for shape/context only — never derive counts or totals from this sample):
 ${JSON.stringify(rowsForContext)}`;
@@ -82,12 +91,6 @@ ${JSON.stringify(rowsForContext)}`;
 
         const gateway = createLovableAiGatewayProvider(key);
         const model = gateway("google/gemini-3-flash-preview");
-
-        const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
-        const lastUserText =
-          lastUserMessage?.parts
-            ?.map((p) => (p.type === "text" ? p.text : ""))
-            .join("") ?? "";
 
         const result = streamText({
           model,
@@ -117,6 +120,7 @@ ${JSON.stringify(rowsForContext)}`;
               }
               if (rows.length) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
                 await supabaseAdmin.from("chat_messages").insert(rows as any);
                 await supabaseAdmin
                   .from("chat_threads")
