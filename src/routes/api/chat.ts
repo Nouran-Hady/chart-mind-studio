@@ -366,7 +366,7 @@ function computeRequestedExactCalculations(
     .slice(0, 10)
     .map(([value, count]) => ({ value, count }));
   const topOne = top[0];
-  return JSON.stringify({
+  return {
     operation: countColumn
       ? `groupby('${groupColumn.name}')['${countColumn.name}'].count().sort_values(desc).head(10)`
       : `${groupColumn.name}.value_counts().head(10)`,
@@ -376,7 +376,7 @@ function computeRequestedExactCalculations(
     top,
     topOne,
     topOneShareOfRows: topOne ? Number((topOne.count / rows.length).toFixed(6)) : null,
-  });
+  };
 }
 
 function findColumn(questionLower: string, schema: ColumnLite[], hints: string[]) {
