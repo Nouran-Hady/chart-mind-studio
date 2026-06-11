@@ -195,6 +195,83 @@ type RequestedExactCalculation = {
   topOneShareOfRows: number | null;
 };
 
+async function createExactAnswerResponse({
+  answer,
+  messages,
+  threadId,
+  userId,
+  datasetId,
+  lastUserText,
+}: {
+  answer: string;
+  messages: UIMessage[];
+  threadId: string;
+  userId: string;
+  datasetId: string;
+  lastUserText: string;
+}) {
+  const lastUser = [...messages].reverse().find((m) => m.role === "user");
+  const assistantMessage: UIMessage = {
+    id: crypto.randomUUID(),
+    role: "assistant",
+    parts: [{ type: "text", text: answer }],
+  };
+  await persistChatTurn({ lastUser, assistantMessage, threadId, userId, datasetId, lastUserText });
+
+  const stream = createUIMessageStream<UIMessage>({
+    originalMessages: messages,
+    execute: ({ writer }) => {
+      writer.write({ type: "start" });
+      writer.write({ type: "start-step" });
+      writer.write({ type: "text-start", id: "exact-answer" });
+      writer.write({ type: "text-delta", id: "exact-answer", delta: answer });
+      writer.write({ type: "text-end", id: "exact-answer" });
+      writer.write({ type: "finish-step" });
+      writer.write({ type: "finish", finishReason: "stop" });
+    },
+  });
+  return createUIMessageStreamResponse({ stream });
+}
+
+async function persistChatTurn({
+  lastUser,
+  assistantMessage,
+  threadId,
+  userId,
+  datasetId,
+  lastUserText,
+}: {
+  lastUser?: UIMessage;
+  assistantMessage?: UIMessage;
+  threadId: string;
+  userId: string;
+  datasetId: string;
+  lastUserText: string;
+}) {
+  const rows: Array<Record<string, unknown>> = [];
+  if (lastUser) rows.push({ thread_id: threadId, user_id: userId, role: "user", message: lastUser as unknown as object });
+  if (assistantMessage) {
+    rows.push({ thread_id: threadId, user_id: userId, role: "assistant", message: assistantMessage as unknown as object });
+  }
+  if (!rows.length) return;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await supabaseAdmin.from("chat_messages").insert(rows as any);
+  await supabaseAdmin.from("chat_threads").update({ updated_at: new Date().toISOString() }).eq("id", threadId);
+  if (lastUserText && assistantMessage) {
+    const assistantText = assistantMessage.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
+    await supabaseAdmin.from("insights").insert({
+      user_id: userId,
+      dataset_id: datasetId,
+      thread_id: threadId,
+      question: lastUserText.slice(0, 1000),
+      insight_text: assistantText.slice(0, 8000),
+      chart_type: null,
+      chart_config: null,
+    });
+  }
+}
+
 function computeDatasetStats(rows: Record<string, unknown>[], schema: ColumnLite[] | null) {
   if (!rows.length || !schema) return {};
   const out: Record<string, unknown> = { totalRows: rows.length };
