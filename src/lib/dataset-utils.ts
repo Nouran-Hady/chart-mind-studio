@@ -19,6 +19,14 @@ export interface ParsedDataset {
   missingValues: number;
 }
 
+export interface ParsedSheet extends ParsedDataset {
+  sheetName: string;
+}
+
+export interface ParsedWorkbook {
+  sheets: ParsedSheet[];
+}
+
 function inferType(values: unknown[]): ColumnType {
   let nums = 0, dates = 0, bools = 0, total = 0;
   for (const v of values) {
@@ -35,11 +43,7 @@ function inferType(values: unknown[]): ColumnType {
   return "string";
 }
 
-export async function parseFile(file: File): Promise<ParsedDataset> {
-  const buf = await file.arrayBuffer();
-  const wb = XLSX.read(buf, { type: "array", cellDates: true });
-  const sheet = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: null, raw: true });
+function buildParsedFromRows(rows: Record<string, unknown>[]): ParsedDataset {
   const columns = rows[0] ? Object.keys(rows[0]) : [];
   let missingTotal = 0;
   const schema: ColumnSchema[] = columns.map((col) => {
@@ -56,7 +60,6 @@ export async function parseFile(file: File): Promise<ParsedDataset> {
       sample: values.slice(0, 5).map((v) => (v instanceof Date ? v.toISOString() : (v as never))),
     };
   });
-  // Normalize dates to ISO strings for JSON storage
   const normalized = rows.map((r) => {
     const out: Record<string, unknown> = {};
     for (const k of columns) {
@@ -72,4 +75,23 @@ export async function parseFile(file: File): Promise<ParsedDataset> {
     columnCount: columns.length,
     missingValues: missingTotal,
   };
+}
+
+export async function parseFile(file: File): Promise<ParsedDataset> {
+  const wb = await parseWorkbook(file);
+  return wb.sheets[0];
+}
+
+export async function parseWorkbook(file: File): Promise<ParsedWorkbook> {
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: "array", cellDates: true });
+  const sheets: ParsedSheet[] = wb.SheetNames.map((name) => {
+    const sheet = wb.Sheets[name];
+    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+      defval: null,
+      raw: true,
+    });
+    return { sheetName: name, ...buildParsedFromRows(rows) };
+  }).filter((s) => s.rowCount > 0 || s.columnCount > 0);
+  return { sheets };
 }
