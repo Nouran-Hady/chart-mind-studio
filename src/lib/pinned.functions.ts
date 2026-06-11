@@ -62,7 +62,7 @@ export type AutoInsight = {
     type: "bar" | "line" | "pie";
     xKey: string;
     yKey: string;
-    data: Array<Record<string, unknown>>;
+    data: Array<{ label: string; value: number }>;
   };
 };
 
