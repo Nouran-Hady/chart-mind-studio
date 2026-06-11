@@ -220,6 +220,7 @@ async function createExactAnswerResponse({
 
   const stream = createUIMessageStream<UIMessage>({
     originalMessages: messages,
+    generateId: () => assistantMessage.id,
     execute: ({ writer }) => {
       writer.write({ type: "start" });
       writer.write({ type: "start-step" });
@@ -368,7 +369,7 @@ function computeRequestedExactCalculations(
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10)
     .map(([value, count]) => ({ value, count }));
-  const topOne = top[0];
+  const topOne = top[0] ?? null;
   return {
     operation: countColumn
       ? `groupby('${groupColumn.name}')['${countColumn.name}'].count().sort_values(desc).head(10)`
