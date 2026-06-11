@@ -18,8 +18,8 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedDatasetsIndexRouteImport } from './routes/_authenticated/datasets.index'
 import { Route as AuthenticatedDatasetsDatasetIdRouteImport } from './routes/_authenticated/datasets.$datasetId'
-import { Route as AuthenticatedDashboardDatasetIdRouteImport } from './routes/_authenticated/dashboard.$datasetId'
 import { Route as AuthenticatedChatThreadIdRouteImport } from './routes/_authenticated/chat.$threadId'
+import { Route as AuthenticatedBoardDatasetIdRouteImport } from './routes/_authenticated/board.$datasetId'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -67,16 +67,16 @@ const AuthenticatedDatasetsDatasetIdRoute =
     path: '/datasets/$datasetId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedDashboardDatasetIdRoute =
-  AuthenticatedDashboardDatasetIdRouteImport.update({
-    id: '/$datasetId',
-    path: '/$datasetId',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
 const AuthenticatedChatThreadIdRoute =
   AuthenticatedChatThreadIdRouteImport.update({
     id: '/chat/$threadId',
     path: '/chat/$threadId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedBoardDatasetIdRoute =
+  AuthenticatedBoardDatasetIdRouteImport.update({
+    id: '/board/$datasetId',
+    path: '/board/$datasetId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
@@ -84,11 +84,11 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
-  '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/upload': typeof AuthenticatedUploadRoute
   '/api/chat': typeof ApiChatRoute
+  '/board/$datasetId': typeof AuthenticatedBoardDatasetIdRoute
   '/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
-  '/dashboard/$datasetId': typeof AuthenticatedDashboardDatasetIdRoute
   '/datasets/$datasetId': typeof AuthenticatedDatasetsDatasetIdRoute
   '/datasets/': typeof AuthenticatedDatasetsIndexRoute
 }
@@ -96,11 +96,11 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
-  '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/upload': typeof AuthenticatedUploadRoute
   '/api/chat': typeof ApiChatRoute
+  '/board/$datasetId': typeof AuthenticatedBoardDatasetIdRoute
   '/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
-  '/dashboard/$datasetId': typeof AuthenticatedDashboardDatasetIdRoute
   '/datasets/$datasetId': typeof AuthenticatedDatasetsDatasetIdRoute
   '/datasets': typeof AuthenticatedDatasetsIndexRoute
 }
@@ -110,11 +110,11 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
-  '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/upload': typeof AuthenticatedUploadRoute
   '/api/chat': typeof ApiChatRoute
+  '/_authenticated/board/$datasetId': typeof AuthenticatedBoardDatasetIdRoute
   '/_authenticated/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
-  '/_authenticated/dashboard/$datasetId': typeof AuthenticatedDashboardDatasetIdRoute
   '/_authenticated/datasets/$datasetId': typeof AuthenticatedDatasetsDatasetIdRoute
   '/_authenticated/datasets/': typeof AuthenticatedDatasetsIndexRoute
 }
@@ -127,8 +127,8 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/upload'
     | '/api/chat'
+    | '/board/$datasetId'
     | '/chat/$threadId'
-    | '/dashboard/$datasetId'
     | '/datasets/$datasetId'
     | '/datasets/'
   fileRoutesByTo: FileRoutesByTo
@@ -139,8 +139,8 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/upload'
     | '/api/chat'
+    | '/board/$datasetId'
     | '/chat/$threadId'
-    | '/dashboard/$datasetId'
     | '/datasets/$datasetId'
     | '/datasets'
   id:
@@ -152,8 +152,8 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/upload'
     | '/api/chat'
+    | '/_authenticated/board/$datasetId'
     | '/_authenticated/chat/$threadId'
-    | '/_authenticated/dashboard/$datasetId'
     | '/_authenticated/datasets/$datasetId'
     | '/_authenticated/datasets/'
   fileRoutesById: FileRoutesById
@@ -230,13 +230,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDatasetsDatasetIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/dashboard/$datasetId': {
-      id: '/_authenticated/dashboard/$datasetId'
-      path: '/$datasetId'
-      fullPath: '/dashboard/$datasetId'
-      preLoaderRoute: typeof AuthenticatedDashboardDatasetIdRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
     '/_authenticated/chat/$threadId': {
       id: '/_authenticated/chat/$threadId'
       path: '/chat/$threadId'
@@ -244,27 +237,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatThreadIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/board/$datasetId': {
+      id: '/_authenticated/board/$datasetId'
+      path: '/board/$datasetId'
+      fullPath: '/board/$datasetId'
+      preLoaderRoute: typeof AuthenticatedBoardDatasetIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
-
-interface AuthenticatedDashboardRouteChildren {
-  AuthenticatedDashboardDatasetIdRoute: typeof AuthenticatedDashboardDatasetIdRoute
-}
-
-const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
-  {
-    AuthenticatedDashboardDatasetIdRoute: AuthenticatedDashboardDatasetIdRoute,
-  }
-
-const AuthenticatedDashboardRouteWithChildren =
-  AuthenticatedDashboardRoute._addFileChildren(
-    AuthenticatedDashboardRouteChildren,
-  )
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
-  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedUploadRoute: typeof AuthenticatedUploadRoute
+  AuthenticatedBoardDatasetIdRoute: typeof AuthenticatedBoardDatasetIdRoute
   AuthenticatedChatThreadIdRoute: typeof AuthenticatedChatThreadIdRoute
   AuthenticatedDatasetsDatasetIdRoute: typeof AuthenticatedDatasetsDatasetIdRoute
   AuthenticatedDatasetsIndexRoute: typeof AuthenticatedDatasetsIndexRoute
@@ -272,8 +259,9 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
-  AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedUploadRoute: AuthenticatedUploadRoute,
+  AuthenticatedBoardDatasetIdRoute: AuthenticatedBoardDatasetIdRoute,
   AuthenticatedChatThreadIdRoute: AuthenticatedChatThreadIdRoute,
   AuthenticatedDatasetsDatasetIdRoute: AuthenticatedDatasetsDatasetIdRoute,
   AuthenticatedDatasetsIndexRoute: AuthenticatedDatasetsIndexRoute,

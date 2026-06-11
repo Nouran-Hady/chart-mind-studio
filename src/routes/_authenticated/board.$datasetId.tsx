@@ -10,7 +10,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 
-export const Route = createFileRoute("/_authenticated/dashboard/$datasetId")({
+export const Route = createFileRoute("/_authenticated/board/$datasetId")({
   head: () => ({ meta: [{ title: "Dashboard — InsightAI" }] }),
   component: BoardPage,
 });
