@@ -1,5 +1,5 @@
 // Client-safe dataset helpers: parse Excel/CSV and infer schema.
-import * as XLSX from "xlsx";
+// xlsx is dynamically imported inside parseWorkbook to keep it out of the SSR worker bundle.
 
 export type ColumnType = "number" | "string" | "date" | "boolean";
 
