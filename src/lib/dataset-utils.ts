@@ -83,6 +83,7 @@ export async function parseFile(file: File): Promise<ParsedDataset> {
 }
 
 export async function parseWorkbook(file: File): Promise<ParsedWorkbook> {
+  const XLSX = await import("xlsx");
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: "array", cellDates: true });
   const sheets: ParsedSheet[] = wb.SheetNames.map((name) => {
