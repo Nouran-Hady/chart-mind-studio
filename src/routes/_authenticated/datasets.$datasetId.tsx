@@ -206,18 +206,6 @@ function DatasetDetail() {
   );
 }
 
-type AutoInsight = {
-  id: string;
-  kind: "top-value" | "outlier" | "missing" | "distribution" | "trend" | "summary";
-  title: string;
-  description: string;
-  chart?: {
-    type: "bar" | "line" | "pie";
-    xKey: string;
-    yKey: string;
-    data: Array<{ label: string; value: number }>;
-  };
-};
 
 function InsightCard({ insight }: { insight: AutoInsight }) {
   const Icon =
