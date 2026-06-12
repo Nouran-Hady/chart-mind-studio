@@ -31,7 +31,8 @@ function Landing() {
             </div>
             <span className="font-bold text-lg tracking-tight">InsightAI</span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <a href="#pricing" className="hidden sm:inline-flex items-center px-3 py-2 text-sm text-muted-foreground hover:text-foreground">Pricing</a>
             <Button asChild variant="ghost"><Link to="/auth">Sign in</Link></Button>
             <Button asChild><Link to="/auth">Get started</Link></Button>
           </div>
