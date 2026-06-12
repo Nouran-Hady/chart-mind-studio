@@ -1,5 +1,5 @@
 // Client-safe dataset helpers: parse Excel/CSV and infer schema.
-import * as XLSX from "xlsx";
+// xlsx is dynamically imported inside parseWorkbook to keep it out of the SSR worker bundle.
 
 export type ColumnType = "number" | "string" | "date" | "boolean";
 
@@ -83,6 +83,7 @@ export async function parseFile(file: File): Promise<ParsedDataset> {
 }
 
 export async function parseWorkbook(file: File): Promise<ParsedWorkbook> {
+  const XLSX = await import("xlsx");
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: "array", cellDates: true });
   const sheets: ParsedSheet[] = wb.SheetNames.map((name) => {
