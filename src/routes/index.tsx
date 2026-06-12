@@ -72,6 +72,62 @@ function Landing() {
             </div>
           ))}
         </section>
+        <section id="pricing" className="py-20 border-t border-border/50">
+          <div className="max-w-2xl mx-auto text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/40 bg-accent/10 text-xs text-accent mb-4">
+              <span className="size-1.5 rounded-full bg-accent animate-pulse" />
+              Early access — first 10 users only
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
+              Simple, founder-friendly pricing
+            </h2>
+            <p className="text-muted-foreground">
+              Start free. Upgrade when you're ready to unlock unlimited datasets and chats.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div className="p-8 rounded-2xl border border-border/50 bg-card/50">
+              <h3 className="font-semibold text-lg mb-1">Free</h3>
+              <p className="text-sm text-muted-foreground mb-6">Try it out, no card required</p>
+              <div className="flex items-baseline gap-1 mb-6">
+                <span className="text-5xl font-bold tracking-tight">$0</span>
+                <span className="text-muted-foreground">/mo</span>
+              </div>
+              <ul className="space-y-3 text-sm mb-8">
+                <li>· 1 dataset</li>
+                <li>· 20 AI messages / month</li>
+                <li>· Basic charts</li>
+                <li>· Community support</li>
+              </ul>
+              <Button asChild variant="outline" className="w-full"><Link to="/auth">Get started</Link></Button>
+            </div>
+
+            <div className="relative p-8 rounded-2xl border-2 border-accent bg-gradient-to-br from-primary/5 to-accent/10 shadow-lg">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold shadow">
+                40% OFF — limited
+              </div>
+              <h3 className="font-semibold text-lg mb-1">Pro</h3>
+              <p className="text-sm text-muted-foreground mb-6">For analysts who need more</p>
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="text-5xl font-bold tracking-tight">$15</span>
+                <span className="text-muted-foreground">/mo</span>
+                <span className="text-lg text-muted-foreground line-through ml-2">$25</span>
+              </div>
+              <p className="text-xs text-accent mb-6 font-medium">
+                Founder price locked in for life — first 10 users only
+              </p>
+              <ul className="space-y-3 text-sm mb-8">
+                <li>· Unlimited datasets</li>
+                <li>· Unlimited AI messages</li>
+                <li>· Auto insights & dashboards</li>
+                <li>· PDF export</li>
+                <li>· Priority support</li>
+              </ul>
+              <Button asChild className="w-full"><Link to="/auth">Claim founder price</Link></Button>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="border-t border-border/50 mt-16">
