@@ -7,7 +7,7 @@ import {
   createThread,
   deleteThread,
 } from "@/lib/datasets.functions";
-import { computeAutoInsights } from "@/lib/pinned.functions";
+import { computeAutoInsights, type AutoInsight } from "@/lib/pinned.functions";
 import { Plus, MessageSquare, Trash2, AlertTriangle, CheckCircle2, ArrowLeft, Sparkles, LayoutDashboard, TrendingUp, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import type { ColumnSchema } from "@/lib/dataset-utils";
