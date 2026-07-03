@@ -68,6 +68,22 @@ export const Route = createFileRoute("/api/chat")({
           .single();
         if (dsErr || !dataset) return new Response("Dataset not found", { status: 404 });
 
+        // --- Quota check: 5 messages/day, 5 distinct days/month -------------
+        const quotaMsg = await checkQuota(userId);
+        if (quotaMsg) {
+          return await createExactAnswerResponse({
+            answer: quotaMsg,
+            messages,
+            threadId,
+            userId,
+            datasetId,
+            lastUserText:
+              [...messages].reverse().find((m) => m.role === "user")?.parts
+                ?.map((p) => (p.type === "text" ? p.text : ""))
+                .join("") ?? "",
+          });
+        }
+
         const allRows = Array.isArray(dataset.full_rows)
           ? (dataset.full_rows as Record<string, unknown>[])
           : [];
