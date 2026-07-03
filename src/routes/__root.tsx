@@ -79,18 +79,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
+      { title: "Insight Weaver" },
       { name: "description", content: "Insight Weaver is a React web app for AI-powered data analysis and visualization of Excel files." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
+      { property: "og:title", content: "Insight Weaver" },
       { property: "og:description", content: "Insight Weaver is a React web app for AI-powered data analysis and visualization of Excel files." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Lovable App" },
+      { name: "twitter:title", content: "Insight Weaver" },
       { name: "twitter:description", content: "Insight Weaver is a React web app for AI-powered data analysis and visualization of Excel files." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/249f3205-ac7c-4f56-93f3-8676adc61231/id-preview-6dce7853--cc8b29d7-adaa-42b8-bcf1-5355055e4fc5.lovable.app-1781276202661.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/249f3205-ac7c-4f56-93f3-8676adc61231/id-preview-6dce7853--cc8b29d7-adaa-42b8-bcf1-5355055e4fc5.lovable.app-1781276202661.png" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/b4a25b75-733c-4105-8b25-dd2a5c94b5d9" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/b4a25b75-733c-4105-8b25-dd2a5c94b5d9" },
     ],
     links: [
       {
