@@ -35,6 +35,7 @@ import {
   Legend,
 } from "recharts";
 import { getThreadMessages, getDataset } from "@/lib/datasets.functions";
+import { getQuota } from "@/lib/quota.functions";
 
 export const Route = createFileRoute("/_authenticated/chat/$threadId")({
   head: () => ({ meta: [{ title: "Chat — InsightAI" }] }),
