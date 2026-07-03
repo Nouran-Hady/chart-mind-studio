@@ -199,7 +199,43 @@ ${JSON.stringify(rowsForContext)}`;
   },
 });
 
-// --- Exact aggregations over the full dataset -------------------------------
+// --- Quota: 5 messages/day, 5 distinct active days/month --------------------
+const DAILY_LIMIT = 5;
+const MONTHLY_DAYS_LIMIT = 5;
+
+async function checkQuota(userId: string): Promise<string | null> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const now = new Date();
+  const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+
+  const { data: monthRows, error } = await supabaseAdmin
+    .from("chat_messages")
+    .select("created_at")
+    .eq("user_id", userId)
+    .eq("role", "user")
+    .gte("created_at", startOfMonth.toISOString());
+  if (error) return null;
+
+  const todayKey = startOfDay.toISOString().slice(0, 10);
+  const daysUsed = new Set<string>();
+  let todayCount = 0;
+  for (const r of monthRows ?? []) {
+    const d = new Date(r.created_at as string).toISOString().slice(0, 10);
+    daysUsed.add(d);
+    if (d === todayKey) todayCount++;
+  }
+
+  if (todayCount >= DAILY_LIMIT) {
+    return `You've reached your daily limit of **${DAILY_LIMIT} messages**. Please come back tomorrow to continue exploring your data. 👋`;
+  }
+  if (!daysUsed.has(todayKey) && daysUsed.size >= MONTHLY_DAYS_LIMIT) {
+    return `You've used InsightAI on **${MONTHLY_DAYS_LIMIT} different days this month** — your monthly active-day limit. Your quota resets at the start of next month. See you then! 📅`;
+  }
+  return null;
+}
+
+
 type ColumnLite = { name: string; type: "number" | "string" | "date" | "boolean" };
 type RequestedExactCalculation = {
   operation: string;
