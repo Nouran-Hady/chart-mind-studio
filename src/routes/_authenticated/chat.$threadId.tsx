@@ -129,6 +129,17 @@ function ChatInner({
     onError: (e) => console.error("chat error", e),
   });
 
+  const quotaFn = useServerFn(getQuota);
+  const quota = useQuery({
+    queryKey: ["quota"],
+    queryFn: () => quotaFn(),
+    refetchInterval: 15000,
+  });
+  useEffect(() => {
+    if (status === "ready") quota.refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, messages.length]);
+
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
