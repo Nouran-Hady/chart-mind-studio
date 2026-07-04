@@ -35,7 +35,6 @@ import {
   Legend,
 } from "recharts";
 import { getThreadMessages, getDataset } from "@/lib/datasets.functions";
-import { getQuota } from "@/lib/quota.functions";
 
 export const Route = createFileRoute("/_authenticated/chat/$threadId")({
   head: () => ({ meta: [{ title: "Chat — InsightAI" }] }),
@@ -129,17 +128,6 @@ function ChatInner({
     onError: (e) => console.error("chat error", e),
   });
 
-  const quotaFn = useServerFn(getQuota);
-  const quota = useQuery({
-    queryKey: ["quota"],
-    queryFn: () => quotaFn(),
-    refetchInterval: 15000,
-  });
-  useEffect(() => {
-    if (status === "ready") quota.refetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, messages.length]);
-
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -175,34 +163,6 @@ function ChatInner({
           <div className="font-medium">{datasetName}</div>
         </div>
         <div className="flex items-center gap-2">
-          {quota.data && (
-            <div
-              className="hidden sm:flex items-center gap-2 rounded-md border border-border bg-background/50 px-2.5 py-1.5 text-xs"
-              title="Daily messages · Active days this month"
-            >
-              <span
-                className={
-                  quota.data.remainingToday === 0
-                    ? "text-destructive font-medium"
-                    : quota.data.remainingToday <= 1
-                    ? "text-amber-500 font-medium"
-                    : "text-foreground"
-                }
-              >
-                {quota.data.usedToday}/{quota.data.dailyLimit} today
-              </span>
-              <span className="text-muted-foreground">·</span>
-              <span
-                className={
-                  quota.data.remainingDaysThisMonth === 0 && !quota.data.todayIsActive
-                    ? "text-destructive font-medium"
-                    : "text-muted-foreground"
-                }
-              >
-                {quota.data.daysUsedThisMonth}/{quota.data.monthlyDaysLimit} days this month
-              </span>
-            </div>
-          )}
           {busy && (
             <button
               onClick={() => stop()}
