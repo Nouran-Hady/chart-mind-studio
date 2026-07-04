@@ -6,7 +6,7 @@ import {
   streamText,
   type UIMessage,
 } from "ai";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { createOllamaCloudProvider } from "@/lib/ai-gateway.server";
 import { createClient } from "@supabase/supabase-js";
 
 const SYSTEM_PROMPT = `You are InsightAI, a senior data analyst built into a self-serve BI tool.
