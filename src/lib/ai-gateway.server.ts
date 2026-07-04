@@ -10,13 +10,3 @@ export function createLovableAiGatewayProvider(lovableApiKey: string) {
     },
   });
 }
-
-export function createOllamaCloudProvider(apiKey: string) {
-  return createOpenAICompatible({
-    name: "ollama",
-    baseURL: "https://ollama.com/v1",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-    },
-  });
-}

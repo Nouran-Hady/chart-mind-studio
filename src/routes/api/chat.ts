@@ -6,7 +6,7 @@ import {
   streamText,
   type UIMessage,
 } from "ai";
-import { createOllamaCloudProvider } from "@/lib/ai-gateway.server";
+import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { createClient } from "@supabase/supabase-js";
 
 const SYSTEM_PROMPT = `You are InsightAI, a senior data analyst built into a self-serve BI tool.
@@ -105,11 +105,11 @@ ${JSON.stringify(rowsForContext)}`;
           });
         }
 
-        const key = process.env.OLLAMA_API_KEY;
-        if (!key) return new Response("Missing OLLAMA_API_KEY", { status: 500 });
+        const key = process.env.LOVABLE_API_KEY;
+        if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
 
-        const gateway = createOllamaCloudProvider(key);
-        const model = gateway("gpt-oss:120b");
+        const gateway = createLovableAiGatewayProvider(key);
+        const model = gateway("google/gemini-3-flash-preview");
 
         const result = streamText({
           model,
