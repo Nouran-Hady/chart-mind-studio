@@ -105,11 +105,11 @@ ${JSON.stringify(rowsForContext)}`;
           });
         }
 
-        const key = process.env.LOVABLE_API_KEY;
-        if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
+        const key = process.env.OLLAMA_API_KEY;
+        if (!key) return new Response("Missing OLLAMA_API_KEY", { status: 500 });
 
-        const gateway = createLovableAiGatewayProvider(key);
-        const model = gateway("google/gemini-3-flash-preview");
+        const gateway = createOllamaCloudProvider(key);
+        const model = gateway("gpt-oss:120b");
 
         const result = streamText({
           model,
