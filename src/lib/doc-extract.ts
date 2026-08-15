@@ -44,10 +44,11 @@ export async function extractDocument(file: File): Promise<ExtractedDoc> {
   if (ext === "docx") {
     const mammoth = await import("mammoth");
     const buf = await file.arrayBuffer();
-    const { value } = await mammoth.convertToMarkdown({ arrayBuffer: buf });
+    const { value: html } = await mammoth.convertToHtml({ arrayBuffer: buf });
     const { value: text } = await mammoth.extractRawText({ arrayBuffer: buf });
-    return { markdown: `# ${base}\n\n${value}`, raw: text, metadata: { format: "docx" } };
+    return { markdown: `# ${base}\n\n${htmlToMarkdown(html)}`, raw: text, metadata: { format: "docx" } };
   }
+
 
   if (ext === "pdf") {
     const pdfjs = await import("pdfjs-dist");
