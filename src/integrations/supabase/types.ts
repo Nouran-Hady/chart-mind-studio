@@ -132,6 +132,185 @@ export type Database = {
         }
         Relationships: []
       }
+      document_chunks: {
+        Row: {
+          chunk_index: number
+          content: string
+          created_at: string
+          document_id: string
+          document_version: number
+          id: string
+          section: string | null
+          token_estimate: number
+          user_id: string
+          vector_id: string | null
+          version_id: string | null
+        }
+        Insert: {
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          document_id: string
+          document_version?: number
+          id?: string
+          section?: string | null
+          token_estimate?: number
+          user_id: string
+          vector_id?: string | null
+          version_id?: string | null
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          document_id?: string
+          document_version?: number
+          id?: string
+          section?: string | null
+          token_estimate?: number
+          user_id?: string
+          vector_id?: string | null
+          version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_chunks_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "document_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_versions: {
+        Row: {
+          created_at: string
+          created_by_email: string | null
+          document_id: string
+          id: string
+          markdown: string
+          note: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by_email?: string | null
+          document_id: string
+          id?: string
+          markdown?: string
+          note?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          version: number
+        }
+        Update: {
+          created_at?: string
+          created_by_email?: string | null
+          document_id?: string
+          id?: string
+          markdown?: string
+          note?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_versions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          active_version: number | null
+          chunk_count: number
+          created_at: string
+          current_version: number
+          extraction_status: string
+          file_size: number
+          file_type: string
+          filename: string
+          id: string
+          ingestion_error: string | null
+          ingestion_progress: Json
+          ingestion_status: string
+          metadata: Json
+          name: string
+          original_content: string
+          review_status: string
+          source_type: string
+          updated_at: string
+          user_id: string
+          vector_count: number
+          vector_index: string | null
+          vector_namespace: string | null
+        }
+        Insert: {
+          active_version?: number | null
+          chunk_count?: number
+          created_at?: string
+          current_version?: number
+          extraction_status?: string
+          file_size?: number
+          file_type?: string
+          filename: string
+          id?: string
+          ingestion_error?: string | null
+          ingestion_progress?: Json
+          ingestion_status?: string
+          metadata?: Json
+          name: string
+          original_content?: string
+          review_status?: string
+          source_type?: string
+          updated_at?: string
+          user_id: string
+          vector_count?: number
+          vector_index?: string | null
+          vector_namespace?: string | null
+        }
+        Update: {
+          active_version?: number | null
+          chunk_count?: number
+          created_at?: string
+          current_version?: number
+          extraction_status?: string
+          file_size?: number
+          file_type?: string
+          filename?: string
+          id?: string
+          ingestion_error?: string | null
+          ingestion_progress?: Json
+          ingestion_status?: string
+          metadata?: Json
+          name?: string
+          original_content?: string
+          review_status?: string
+          source_type?: string
+          updated_at?: string
+          user_id?: string
+          vector_count?: number
+          vector_index?: string | null
+          vector_namespace?: string | null
+        }
+        Relationships: []
+      }
       insights: {
         Row: {
           chart_config: Json | null
