@@ -9,6 +9,23 @@ export interface ExtractedDoc {
 
 const escapeCell = (v: unknown) => String(v ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ");
 
+function htmlToMarkdown(html: string): string {
+  return html
+    .replace(/<h([1-6])>(.*?)<\/h\1>/gis, (_m, l: string, t: string) => `\n\n${"#".repeat(Number(l) + 1)} ${t}\n\n`)
+    .replace(/<(strong|b)>(.*?)<\/\1>/gis, "**$2**")
+    .replace(/<(em|i)>(.*?)<\/\1>/gis, "_$2_")
+    .replace(/<li>(.*?)<\/li>/gis, "- $1\n")
+    .replace(/<\/(p|div|ul|ol|table|tr)>/gi, "\n\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 function rowsToMarkdownTable(rows: Record<string, unknown>[], limit = 200): string {
   if (!rows.length) return "";
   const cols = Object.keys(rows[0]);
